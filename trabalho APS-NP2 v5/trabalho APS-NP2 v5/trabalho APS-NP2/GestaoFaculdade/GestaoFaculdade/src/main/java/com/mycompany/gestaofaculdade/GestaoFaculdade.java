@@ -1,0 +1,241 @@
+package com.mycompany.gestaofaculdade;
+
+/**
+ *
+ * 
+ */
+import java.util.*;
+import javax.swing.JOptionPane;
+
+public class GestaoFaculdade {
+    // Listas criadas para armezenar as informações de cadastro, simulando um "banco de dados"
+    private static List<Professor> professores = new ArrayList<>();
+    private static List<Aluno> alunos = new ArrayList<>();
+    private static List<Curso> cursos = new ArrayList<>();
+    private static Scanner scanner = new Scanner(System.in);
+
+    public static void main(String[] args) {
+        int opcao;
+        
+        do {
+            // cria uma String para o menu para exibir usando JOptionPane
+            String menu = """
+                          _________MENU_________
+                          1. Cadastrar professor
+                          2. Cadastrar aluno
+                          3. Criar curso
+                          4. Adicionar aluno ao curso
+                          5. Lan\u00e7ar nota
+                          6. Calcular m\u00e9dia de um aluno
+                          7. Mostrar professores cadastrados
+                          8. Mostrar alunos cadastrados
+                          9. Limpar cadastros de alunos e professores
+                          10. Salvar dados cadastrados em CSV
+                          0. Sair""";
+
+            // Exibe o menu em um painel gráfico
+            String input = JOptionPane.showInputDialog(menu);
+            try {
+                opcao = Integer.parseInt(input); // Converte a entrada para um número
+            } catch (NumberFormatException e) {
+                opcao = -1; // Caso o usuário insira algo que não seja número
+            }
+
+            // Executa a ação baseada na opção escolhida
+            // O [null] define que a janela apareça no centro de uma "janela pai", que no caso aqui seria a IDE.
+            // o [null] aparece em mais partes do código na mesma situação.
+            switch (opcao) {
+                case 1 -> cadastrarProfessor();
+                case 2 -> cadastrarAluno();
+                case 3 -> criarCurso();
+                case 4 -> adicionarAlunoAoCurso();
+                case 5 -> lancarNota();
+                case 6 -> calcularMedia();
+                case 7 -> mostrarProfessores();
+                case 8 -> mostrarAlunos();
+                case 9 -> limparCadastros();
+                case 10 -> {
+                            SalvarCSV.salvarProfessores(professores);
+                            SalvarCSV.salvarAlunos(alunos);
+                            SalvarCSV.salvarCursos(cursos);
+                            }
+                case 0 -> JOptionPane.showMessageDialog(null, "Saindo...");
+                default -> JOptionPane.showMessageDialog(null, "Opção inválida!");
+            }
+        } while (opcao != 0);
+    }
+
+    // Pede-se o nome e cpf via paineis e coloca um novo objeto "Professor" na lista [professores]
+    private static void cadastrarProfessor() {
+        String nome = JOptionPane.showInputDialog("Nome do professor:");
+        String cpf = JOptionPane.showInputDialog("CPF:");
+        professores.add(new Professor(nome, cpf));
+        JOptionPane.showMessageDialog(null, "Professor cadastrado!");
+        JOptionPane.showMessageDialog(null, "Para salvar os dados digitados escolha a opção '10' no menu inicial.");
+    }
+    
+    // Mesmo sistema do metodo [cadastrarProfessor]
+    private static void cadastrarAluno() {
+        String nome = JOptionPane.showInputDialog("Nome do aluno:");
+        String cpf = JOptionPane.showInputDialog("CPF:");
+        alunos.add(new Aluno(nome, cpf));
+        JOptionPane.showMessageDialog(null, "Aluno cadastrado!");
+        JOptionPane.showMessageDialog(null, "Para salvar os dados digitados escolha a opção '10' no menu inicial.");
+    }
+ 
+    // Método para criar um curso na faculdade
+        /* idc = indice
+            Primeiro, pede para o usuário o nome do curso. Em [StringBuilder] pede o número do professor que lecionará
+                    Caso o professor selecionado não exista na lista, pula para a linha 99 [catch]
+            No [for], faz a concatenação das informações e cria-se a string em forma de menu.
+            No [try], verifica uma exceção de erro. converte o [input] do usuário para int[.parseInt] na variável [idc]
+                    Com o [idc], acessa o professor na lista [professores] com [professores.get(idc)] e 
+                    cria um novo curso com a string [nomeCurso] e o professor selecionado.
+                    POREEEEM, se o [input/idc] for inválido(ex: número fora da lista [professores]),
+                    acusará [NumberFormatException | IndexOutOfBoundsException] "opção inválida"
+                    literal: formato do número incorreto | Indice fora dos limites
+        */
+    private static void criarCurso() {
+        String nomeCurso = JOptionPane.showInputDialog("Nome do curso:");
+        StringBuilder professoresList = new StringBuilder("Digite o número do professor:\n");
+        for (int i = 0; i < professores.size(); i++) {
+            professoresList.append(i).append(" - ").append(professores.get(i).getNome()).append("\n");
+        }
+        // Exibe a lista [professores] para o usuário escolher[input] o numero do professor
+        String input = JOptionPane.showInputDialog(null, professoresList.toString());
+        try {
+            int idc = Integer.parseInt(input); // converte o [input] para int na variavel [idc]
+            cursos.add(new Curso(nomeCurso, professores.get(idc))); // cria novo curso com [nomeCurso] e o professor da lista que corresponde ao [idc] convertido do input 
+            JOptionPane.showMessageDialog(null, "Curso criado!");
+            JOptionPane.showMessageDialog(null, "Para salvar os dados digitados escolha a opção '10' no menu inicial.");
+        } catch (NumberFormatException | IndexOutOfBoundsException e) {
+            JOptionPane.showMessageDialog(null, "Opção inválida!");
+        }
+    }
+
+    // Método para adicionar/vincular aluno ao curso
+    private static void adicionarAlunoAoCurso() {
+        StringBuilder cursosList = new StringBuilder("Selecione um curso:\n"); //inicia a construção da string que forma o menu de curso
+        for (int i = 0; i < cursos.size(); i++) {
+            cursosList.append(i).append(" - ").append(cursos.get(i).getNome()).append("\n"); //append "concatena"
+        }
+        // Mesmo sistema do [try] do metodo [criarCurso], mas temos um [for] com [try] dentro do [try]
+        String inputCurso = JOptionPane.showInputDialog(null, cursosList.toString());
+        try {
+            int idcCurso = Integer.parseInt(inputCurso); //converte a String[inputCurso] pra int[idcCurso]
+            
+            StringBuilder alunosList = new StringBuilder("Selecione um aluno:\n"); //Inicia a construção da string do menu de aluno
+            for (int i = 0; i < alunos.size(); i++) {
+                alunosList.append(i).append(" - ").append(alunos.get(i).getNome()).append("\n");//concatenando
+            }
+            // Mesmo sistema do [try] anterior
+            String inputAluno = JOptionPane.showInputDialog(null, alunosList.toString()); // Mostra a string criada no [for] da linha 114 com um campo para o usuario digitar o input
+            try {
+                int idcAluno = Integer.parseInt(inputAluno); //converte a string[inputAluno] pra int[idcAluno]
+                cursos.get(idcCurso).adicionarAluno(alunos.get(idcAluno)); // Pega o curso correspondente ao digitado[idcCurso] e adiciona o aluno correspondente ao digitado[idcAluno]
+                JOptionPane.showMessageDialog(null, "Aluno adicionado ao curso!");
+            } catch (NumberFormatException | IndexOutOfBoundsException e) {
+                JOptionPane.showMessageDialog(null, "Opção inválida!");
+            }
+        } catch (NumberFormatException | IndexOutOfBoundsException e) {
+            JOptionPane.showMessageDialog(null, "Opção inválida!");
+        } //a explicação das exceptions do metodo [criarCurso()] cabem nessas também
+    }
+
+    private static void lancarNota() {
+        StringBuilder alunosList = new StringBuilder("Selecione um aluno:\n"); //Constroi lista de Aluno em string para ser mostrada
+        for (int i = 0; i < alunos.size(); i++) {
+            alunosList.append(i).append(" - ").append(alunos.get(i).getNome()).append("\n"); //junta as infos de alunos na lista
+        }
+        
+        String input = JOptionPane.showInputDialog(null, alunosList.toString());//pede pro usuário selecionar um aluno da lista
+        try {
+            int idc = Integer.parseInt(input); //converte
+            String notaInput = JOptionPane.showInputDialog("Nota a lançar:"); //pede {em forma de string) a nota que será lançada
+            double nota = Double.parseDouble(notaInput); //converte a nota(string) para double [.parseDouble]
+            alunos.get(idc).adicionarNota(nota); //pega o aluno selecionado e chama o metodo que está na classe aluno[adicionarNota] e adiciona a nota[double] na lista
+            JOptionPane.showMessageDialog(null, "Nota lançada!");
+        } catch (NumberFormatException | IndexOutOfBoundsException e) {
+            JOptionPane.showMessageDialog(null, "Opção ou nota inválida!");
+        }
+    }
+    // Método para calcular media do aluno
+    private static void calcularMedia() {
+        StringBuilder alunosList = new StringBuilder("Selecione um aluno:\n"); // Constroi menu de alunos em string
+        for (int i = 0; i < alunos.size(); i++) {
+            alunosList.append(i).append(" - ").append(alunos.get(i).getNome()).append("\n"); //Concatena as infos da lista [alunos]
+        }
+        
+        String input = JOptionPane.showInputDialog(null, alunosList.toString()); //mostra pro usuário lista de alunos criada pra ele digitar a opç dele
+        try {
+            int idc = Integer.parseInt(input); //converte
+            double media = alunos.get(idc).calcularMedia(); // media = "indice do aluno"."metodo que ta na classe aluno pra calcular media"
+            JOptionPane.showMessageDialog(null, "Média: " + media); //Mostra media
+        } catch (NumberFormatException | IndexOutOfBoundsException e) {
+            JOptionPane.showMessageDialog(null, "Opção inválida!");
+        }
+    }
+
+    // O método primeiro verifica se a lista não está vazia [professor.isEmpty]
+        /* Depois, se houver professor cadastrados, continua e usa [StringBuilder] para criar a lista [listaProfessores].
+           Dentro do [for], percorre a lista [professores] criada antes e 
+           para cada professor nessa lista ele adiciona na [listaProfessor] criada agora
+           e for fim, chama [JOptionPane.showMessageDialog] e mostra a string montada
+           
+            **StringBuilder é literalmente a String se construindo conforme passa no laço e é mostrada no final.**
+        */ 
+    private static void mostrarProfessores() {
+        if (professores.isEmpty()) {
+            JOptionPane.showMessageDialog(null, "Nenhum professor cadastrado.");
+            return;
+        }
+
+        StringBuilder listaProfessores = new StringBuilder("Professores cadastrados:\n");
+        for (int i = 0; i < professores.size(); i++) {
+            listaProfessores.append(i).append(" - ").append(professores.get(i).getNome()).append("\n");
+        }
+        JOptionPane.showMessageDialog(null, listaProfessores.toString());
+    }
+
+    // Método para exibir os alunos cadastrados
+    // mesma sistema do metodo [mostrarProfessor]
+        /*  o laço [for] tem a iniciação da variável [i = 0], a condição [i < alunos.size()] e 
+                o incremento da variável iniciada [i++]. Enquanto [i] for menor que a lista de alunos[alunos.size()], 
+                basicamente, o laço para quando [i] for maior que a lista de alunos[i < alunos.size].
+        */
+        /*
+            Dentro do [for], o metodo [.append] faz parte da [StringBuilder], ele "concatena" as infos, 
+                EXEMPLO: finja que está passando pela primeira vez no laço
+                [listaAlunos.append(0)] [.append(" - ")] [.append(alunos.get(i).getNome()] [.append("/n")] = "0 - Lisa" pula linha
+                pegou o num atual da passagem, adicinou "-", pegou o nome do aluno cadastrado na lista [alunos] e no fim pulou pra linha de baixo
+                Depois do pulo de linha, volta e faz o mesmo processo de acordo com a quantidade de objetos na lista [alunos.size]
+        */
+    
+    private static void mostrarAlunos() {
+        if (alunos.isEmpty()) {
+            JOptionPane.showMessageDialog(null, "Nenhum aluno cadastrado.");
+            return;
+        }
+
+        StringBuilder listaAlunos = new StringBuilder("Alunos cadastrados:\n");
+        for (int i = 0; i < alunos.size(); i++) {
+            listaAlunos.append(i).append(" - ").append(alunos.get(i).getNome()).append("\n");
+        }
+        JOptionPane.showMessageDialog(null, listaAlunos.toString());
+    }
+    // Método para limpar cadastros
+    private static void limparCadastros() {
+        // a variavel [confirmarSim] captura por meio de painel de dialogo "yes or no" se o usuário selecionou sim ou nao
+    int confirmarSim = JOptionPane.showConfirmDialog(null,"Deseja apagar todos os cadastros de professores, alunos e cursos?","Confirmação",JOptionPane.YES_NO_OPTION);
+    // Abaixo verifica o que o usuario selecionou e apaga em caso afirmativo.
+    if (confirmarSim == JOptionPane.YES_OPTION) {
+        professores.clear(); // limpa todos os professores
+        alunos.clear();      // limpa todos os alunos
+        cursos.clear();
+        JOptionPane.showMessageDialog(null, "Cadastros apagados com sucesso!");
+    } else {
+        JOptionPane.showMessageDialog(null, "Operação cancelada.");
+    }
+}
+}
+
